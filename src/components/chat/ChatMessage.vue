@@ -75,20 +75,50 @@ const typingTimeoutId = ref(null);
 // Emit events
 const emit = defineEmits(['typing-progress']);
 
+// Store a flag in sessionStorage to track seen messages
+const markMessageAsSeen = (messageId) => {
+  try {
+    // Get existing seen messages
+    const seenMessages = JSON.parse(sessionStorage.getItem('seenMessages') || '{}');
+    // Mark this message as seen
+    seenMessages[messageId] = true;
+    // Save back to sessionStorage
+    sessionStorage.setItem('seenMessages', JSON.stringify(seenMessages));
+  } catch (e) {
+    console.error('Error marking message as seen:', e);
+  }
+};
+
+// Check if a message has been seen before
+const isMessageSeen = (messageId) => {
+  try {
+    const seenMessages = JSON.parse(sessionStorage.getItem('seenMessages') || '{}');
+    return seenMessages[messageId] === true;
+  } catch (e) {
+    console.error('Error checking if message is seen:', e);
+    return false;
+  }
+};
+
 // Should the message be animated?
 const shouldAnimate = computed(() => {
   // Import the agents store to check session ID
   const agentsStore = useAgentsStore();
+
+  // Check if this message has been seen before
+  const alreadySeen = isMessageSeen(props.message.id);
 
   // Only animate if:
   // 1. The message is from an agent (not user)
   // 2. The message has the current session ID (created during this browser session)
   // 3. The message is marked as new
   // 4. The agent is currently speaking
+  // 5. The message has not been seen before
   return props.message.agentId !== 'user' &&
          props.message.sessionId === agentsStore.sessionId &&
          props.message.isNew === true &&
-         currentAgentStatus.value === 'speaking';
+         currentAgentStatus.value === 'speaking' &&
+         !alreadySeen;
 });
 
 // Get current agent status
@@ -207,6 +237,10 @@ const startTyping = () => {
     } else {
       // Typing is complete
       isTypingComplete.value = true;
+
+      // Mark this message as seen once typing is complete
+      markMessageAsSeen(props.message.id);
+
       emit('typing-progress');
     }
   };
@@ -239,6 +273,11 @@ onMounted(() => {
     // Skip animation for non-animated messages
     displayedText.value = props.message.content;
     isTypingComplete.value = true;
+
+    // For non-user messages, mark as seen even if not animated
+    if (props.message.agentId !== 'user') {
+      markMessageAsSeen(props.message.id);
+    }
   }
 });
 </script>

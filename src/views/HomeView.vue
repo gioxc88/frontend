@@ -61,7 +61,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useRoomsStore } from '../stores/roomsStore';
@@ -91,6 +91,12 @@ const createNewRoom = () => {
   // The actual room creation is handled by AddRoomButton
   router.push('/rooms');
 };
+
+onMounted(() => {
+  // Load rooms from localStorage immediately
+  roomsStore.initRooms();
+});
+
 </script>
 
 <style scoped>

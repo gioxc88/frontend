@@ -62,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, computed, onMounted } from 'vue';
+import { ref, watch, nextTick, computed, onMounted, onBeforeUnmount, onUpdated } from 'vue';
 import { useRoomsStore } from '../../stores/roomsStore';
 import ChatMessage from './ChatMessage.vue';
 
@@ -85,30 +85,108 @@ const userJustScrolled = ref(false);
 const scrollThreshold = 100; // px from bottom to consider "scrolled to bottom"
 const lastScrollPosition = ref(0);
 
+// Use localStorage to persist scroll positions across page navigations
+const scrollPositionMap = ref(new Map());
+
+// Initialize from localStorage
+try {
+  const savedPositions = localStorage.getItem('chatScrollPositions');
+  if (savedPositions) {
+    const positionsObj = JSON.parse(savedPositions);
+    Object.entries(positionsObj).forEach(([roomId, position]) => {
+      scrollPositionMap.value.set(roomId, position);
+    });
+  }
+} catch (e) {
+  console.error('Error loading saved scroll positions:', e);
+}
+
 // Get room data for agent info
 const roomAgents = computed(() => {
   const room = roomsStore.getRoomById(props.roomId);
   return room ? room.agents : [];
 });
 
-// Scroll to bottom of messages with animation
+// Scroll to bottom of messages without animation
 const scrollToBottom = () => {
   if (!messagesContainer.value || !shouldAutoScroll.value) return;
 
   nextTick(() => {
     const container = messagesContainer.value;
+    // Temporarily disable smooth scrolling to prevent animation
+    const currentScrollBehavior = container.style.scrollBehavior;
+    container.style.scrollBehavior = 'auto';
     container.scrollTop = container.scrollHeight;
+    // Restore original scroll behavior if it was set
+    if (currentScrollBehavior) {
+      container.style.scrollBehavior = currentScrollBehavior;
+    }
   });
 };
 
-// Scroll to bottom without checking shouldAutoScroll flag
+// Scroll to bottom immediately without animation
 const scrollToBottomImmediately = () => {
   if (!messagesContainer.value) return;
 
   const container = messagesContainer.value;
+  // Disable smooth scrolling to prevent animation
+  const currentScrollBehavior = container.style.scrollBehavior;
+  container.style.scrollBehavior = 'auto';
   container.scrollTop = container.scrollHeight;
+  // Restore original scroll behavior if it was set
+  if (currentScrollBehavior) {
+    container.style.scrollBehavior = currentScrollBehavior;
+  }
   shouldAutoScroll.value = true;
   showScrollToBottom.value = false;
+};
+
+// Save current scroll position and persist to localStorage
+const saveScrollPosition = () => {
+  if (messagesContainer.value) {
+    // Save to our Map
+    scrollPositionMap.value.set(props.roomId, messagesContainer.value.scrollTop);
+
+    // Convert Map to Object for localStorage
+    const positionsObj = {};
+    scrollPositionMap.value.forEach((value, key) => {
+      positionsObj[key] = value;
+    });
+
+    // Save to localStorage
+    try {
+      localStorage.setItem('chatScrollPositions', JSON.stringify(positionsObj));
+    } catch (e) {
+      console.error('Error saving scroll positions:', e);
+    }
+  }
+};
+
+// Restore saved scroll position immediately without animations
+const restoreScrollPosition = () => {
+  // Need to wait for the DOM to fully render, especially when switching between rooms
+  setTimeout(() => {
+    if (messagesContainer.value) {
+      // Ensure smooth scrolling is disabled
+      messagesContainer.value.style.scrollBehavior = 'auto';
+
+      const savedPosition = scrollPositionMap.value.get(props.roomId);
+
+      if (savedPosition !== undefined) {
+        // Apply scroll immediately
+        messagesContainer.value.scrollTop = savedPosition;
+        console.log(`Restored position for room ${props.roomId}: ${savedPosition}px`);
+
+        // Make sure "scroll to bottom" button appears if we're not at the bottom
+        const isAtBottom = isNearBottom();
+        showScrollToBottom.value = !isAtBottom;
+      } else {
+        // If no saved position, scroll to bottom immediately
+        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+        console.log(`No saved position for room ${props.roomId}, scrolled to bottom`);
+      }
+    }
+  }, 150); // Slightly longer delay to ensure content is rendered
 };
 
 // Check if we're near the bottom
@@ -135,6 +213,9 @@ const handleScroll = (event) => {
 
   // Save last scroll position
   lastScrollPosition.value = container.scrollTop;
+
+  // Save scroll position to the map
+  saveScrollPosition();
 };
 
 // Handle mouse wheel events
@@ -148,6 +229,9 @@ const handleWheel = (event) => {
     setTimeout(() => {
       userJustScrolled.value = false;
     }, 100);
+
+    // Save scroll position when user scrolls
+    saveScrollPosition();
   }
 };
 
@@ -164,26 +248,63 @@ const handleTouchMove = () => {
   }
 
   lastScrollPosition.value = currentScrollTop;
+
+  // Save scroll position when user scrolls
+  saveScrollPosition();
 };
 
 // Handle typing progress from ChatMessage components
 const handleTypingProgress = () => {
-  if (shouldAutoScroll.value) {
+  // Only auto-scroll if user hasn't scrolled up (we're near the bottom already)
+  // AND shouldAutoScroll is true
+  if (shouldAutoScroll.value && isNearBottom()) {
     scrollToBottom();
   }
 };
 
-// When the conversation changes
-watch(() => props.conversation.length, () => {
-  const isAtBottom = isNearBottom();
+// Watch for roomId changes to restore scroll position
+watch(() => props.roomId, (newRoomId, oldRoomId) => {
+  if (oldRoomId) {
+    // Save scroll position for the previous room
+    saveScrollPosition();
+  }
 
-  // Only auto scroll if we were already at the bottom
-  if (isAtBottom) {
+  // Don't auto-reset shouldAutoScroll anymore - we want to maintain state
+  // Only reset if we don't have a saved position
+  if (!scrollPositionMap.value.has(newRoomId)) {
     shouldAutoScroll.value = true;
-    scrollToBottom();
-  } else {
-    // If we're not at the bottom, show the scroll to bottom button
-    showScrollToBottom.value = true;
+  }
+
+  showScrollToBottom.value = false;
+
+  // Restore scroll position for the new room
+  restoreScrollPosition();
+}, { immediate: true }); // Set to true to handle initial room load
+
+// When the conversation changes
+watch(() => props.conversation.length, (newLength, oldLength) => {
+  // Check if this is a new message (length increased)
+  if (newLength > oldLength) {
+    const isAtBottom = isNearBottom();
+
+    // Only auto scroll if we were already at the bottom
+    if (isAtBottom) {
+      shouldAutoScroll.value = true;
+      scrollToBottom();
+    } else {
+      // If we're not at the bottom, show the scroll to bottom button
+      showScrollToBottom.value = true;
+    }
+  } else if (newLength > 0 && oldLength === undefined) {
+    // This is the initial load of the conversation
+    // Restore scroll position if we have one
+    if (scrollPositionMap.value.has(props.roomId)) {
+      setTimeout(() => {
+        if (messagesContainer.value) {
+          messagesContainer.value.scrollTop = scrollPositionMap.value.get(props.roomId);
+        }
+      }, 50);
+    }
   }
 });
 
@@ -193,14 +314,54 @@ watch(() => roomAgents.value.map(agent => agent.status), () => {
     agent.status === 'thinking' || agent.status === 'speaking'
   );
 
-  if (hasTypingAgent && shouldAutoScroll.value) {
+  // Only auto-scroll if the user hasn't manually scrolled up
+  // AND we're set to auto-scroll
+  if (hasTypingAgent && shouldAutoScroll.value && isNearBottom()) {
     scrollToBottom();
   }
 }, { deep: true });
 
-// Initial scroll to bottom
+  // After component updates, save scroll position
+onUpdated(() => {
+  // Small delay to ensure scroll position is stable
+  setTimeout(() => {
+    // Only save if the component is still mounted
+    if (messagesContainer.value) {
+      saveScrollPosition();
+    }
+  }, 100);
+});
+
+// Initial setup when component mounts
 onMounted(() => {
-  scrollToBottom();
+  // Allow component to fully render before setting scroll position
+  setTimeout(() => {
+    if (messagesContainer.value) {
+      // Explicitly disable smooth scrolling
+      messagesContainer.value.style.scrollBehavior = 'auto';
+
+      // Restore previous scroll position if available
+      if (scrollPositionMap.value.has(props.roomId)) {
+        // Get saved position
+        const savedPosition = scrollPositionMap.value.get(props.roomId);
+
+        // Apply saved position
+        messagesContainer.value.scrollTop = savedPosition;
+
+        // Log for debugging
+        console.log(`Restored scroll position for room ${props.roomId}: ${savedPosition}px`);
+      } else {
+        // If no previous position, scroll to bottom immediately
+        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+        console.log(`No saved position for room ${props.roomId}, scrolled to bottom`);
+      }
+    }
+  }, 100); // Slight delay to ensure DOM is fully rendered
+});
+
+// Save scroll position before unmounting
+onBeforeUnmount(() => {
+  saveScrollPosition();
 });
 </script>
 
@@ -243,7 +404,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  scroll-behavior: smooth; /* Enable smooth scrolling */
+  /* Remove smooth scrolling to prevent animations */
 }
 
 .chat-messages.empty {
