@@ -38,15 +38,6 @@
       </div>
     </div>
 
-    <div v-if="rooms.length > 0" class="fixed-add-button">
-      <p-button
-        icon="pi pi-plus"
-        class="p-button-rounded p-button-lg"
-        @click="openAddRoomDialog"
-        aria-label="Add Room"
-      />
-    </div>
-
     <!-- Hidden Add Room Button used for the dialog -->
     <AddRoomButton ref="addRoomBtn" @room-created="onRoomCreated" />
   </div>

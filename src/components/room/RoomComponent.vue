@@ -46,7 +46,7 @@
 
             <div class="input-actions">
               <p-button
-                v-if="!isSimulationRunning"
+                v-if="!isSimulationRunningForRoom"
                 icon="pi pi-play"
                 class="p-button-text p-button-sm"
                 @click="startSimulation"
@@ -77,7 +77,6 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { storeToRefs } from 'pinia';
 import { useRoomsStore } from '@/stores/roomsStore';
 import { useAgentsStore } from '@/stores/agentsStore';
 import RoomHeader from './RoomHeader.vue';
@@ -98,11 +97,9 @@ const props = defineProps({
 
 const emit = defineEmits(['activate', 'remove']);
 
-// Stores
 const roomsStore = useRoomsStore();
 const agentsStore = useAgentsStore();
 
-// Get room data from store
 const room = computed(() => roomsStore.getRoomById(props.roomId) || {
   id: props.roomId,
   title: 'Loading...',
@@ -110,39 +107,29 @@ const room = computed(() => roomsStore.getRoomById(props.roomId) || {
   conversation: []
 });
 
-// Simulation state
-const { isSimulationRunning } = storeToRefs(agentsStore);
-const simulationSpeed = ref(1);
+// Use room-specific simulation state
+const isSimulationRunningForRoom = computed(() => {
+  return agentsStore.activeRoomIds[props.roomId] === true;
+});
 
-// User interaction
 const userMessage = ref('');
 
-// DOM refs
 const roomRef = ref(null);
 
-// Room activation
 const activateRoom = () => {
   emit('activate');
 };
 
-// Room title update
 const updateRoomTitle = (newTitle) => {
   roomsStore.updateRoom(props.roomId, { title: newTitle });
   roomsStore.saveRooms();
 };
 
-// Send a message from the user to the agents
 const sendMessage = () => {
   if (!userMessage.value.trim()) return;
-
-  // In a real implementation, this would add the user's message to the conversation
-  // and potentially trigger agent responses based on the user's input
-
-  // For now, we'll simulate by adding a user message to the conversation
   if (!room.value.conversation) {
     roomsStore.updateRoom(props.roomId, { conversation: [] });
   }
-
   const newMessage = {
     id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
     agentId: 'user',
@@ -151,45 +138,33 @@ const sendMessage = () => {
     timestamp: new Date().toISOString(),
     content: userMessage.value
   };
-
   roomsStore.updateRoom(props.roomId, {
     conversation: [...room.value.conversation, newMessage]
   });
-
-  // Clear the input
   userMessage.value = '';
-
-  // Save changes
   roomsStore.saveRooms();
 
-  // This would potentially trigger agent responses in a real implementation
-  // For now, we'll just start the simulation if it's not already running
-  if (!isSimulationRunning.value) {
+  // Start simulation if not running in this room
+  if (!isSimulationRunningForRoom.value) {
     startSimulation();
   }
 };
 
-// Simulation controls
 const startSimulation = () => {
   agentsStore.startSimulation(props.roomId);
 };
 
 const pauseSimulation = () => {
-  agentsStore.pauseSimulation();
+  agentsStore.pauseSimulation(props.roomId);
 };
 
-const updateSimulationSpeed = () => {
-  agentsStore.setSimulationSpeed(simulationSpeed.value);
-};
-
-// Initial setup
 onMounted(() => {
-  // If room is active on mount, add visual indication
   if (props.isActive) {
     roomRef.value?.classList.add('active');
   }
 });
 </script>
+
 
 <style scoped>
 .room-container {

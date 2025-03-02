@@ -46,12 +46,11 @@ export const useAgentsStore = defineStore('agents', {
   state: () => ({
     agentTypes: AGENT_TYPES,
     conversationCounter: {},
-    simulationSpeed: 1, // Messages per minute multiplier
-    isSimulationRunning: false,
-    activeRoomIds: {}, // Track which rooms have active conversations
-    scheduledTimers: {}, // Track timers for each room
-    typingSpeedBase: 30, // Base typing speed in characters per second (higher = faster)
-    sessionId: uuidv4() // Generate a unique ID for this browser session
+    // Remove the global flag
+    activeRoomIds: {}, // Now used to track simulation per room
+    scheduledTimers: {},
+    typingSpeedBase: 30,
+    sessionId: uuidv4()
   }),
 
   actions: {
@@ -99,27 +98,24 @@ export const useAgentsStore = defineStore('agents', {
     },
 
     startSimulation(roomId) {
-      this.isSimulationRunning = true;
+      // Only mark this room as active
       this.activeRoomIds[roomId] = true;
 
-      // Reset all agents to idle state to prevent stuck states
       const roomsStore = useRoomsStore();
       const room = roomsStore.getRoomById(roomId);
 
       if (room) {
-        // Reset agents to idle
         const resetAgents = room.agents.map(agent => ({
           ...agent,
           status: 'idle'
         }));
 
-        // Mark all existing messages as not new to prevent animation
         let updatedConversation = [];
         if (room.conversation && room.conversation.length > 0) {
           updatedConversation = room.conversation.map(message => ({
             ...message,
             isNew: false,
-            sessionId: this.sessionId // Add the current session ID to mark them
+            sessionId: this.sessionId
           }));
         }
 
@@ -130,26 +126,21 @@ export const useAgentsStore = defineStore('agents', {
         roomsStore.saveRooms();
       }
 
-      // Start the conversation with a short delay
+      // Start conversation after a short delay
       setTimeout(() => {
         this.simulateConversation(roomId);
       }, 500);
     },
 
-    pauseSimulation() {
-      this.isSimulationRunning = false;
-
-      // Clear all scheduled timers
-      Object.keys(this.scheduledTimers).forEach(roomId => {
-        if (this.scheduledTimers[roomId]) {
-          clearTimeout(this.scheduledTimers[roomId]);
-          this.scheduledTimers[roomId] = null;
-        }
-        this.activeRoomIds[roomId] = false;
-      });
+    pauseSimulation(roomId) {
+      // Clear timer only for the specified room
+      if (this.scheduledTimers[roomId]) {
+        clearTimeout(this.scheduledTimers[roomId]);
+        this.scheduledTimers[roomId] = null;
+      }
+      this.activeRoomIds[roomId] = false;
     },
 
-    // Clear any existing timers for a room
     clearRoomTimer(roomId) {
       if (this.scheduledTimers[roomId]) {
         clearTimeout(this.scheduledTimers[roomId]);
@@ -157,20 +148,17 @@ export const useAgentsStore = defineStore('agents', {
       }
     },
 
-    // Check if any agent in the room is currently active
     anyAgentActive(room) {
       return room.agents.some(agent =>
         agent.status === 'speaking' || agent.status === 'thinking'
       );
     },
 
-    // Simulate conversation between agents
     simulateConversation(roomId) {
-      // Clear any existing timer for this room
       this.clearRoomTimer(roomId);
 
-      // Exit if simulation is paused or room is not active
-      if (!this.isSimulationRunning || !this.activeRoomIds[roomId]) {
+      // Use room-specific flag only
+      if (!this.activeRoomIds[roomId]) {
         return;
       }
 
@@ -182,24 +170,19 @@ export const useAgentsStore = defineStore('agents', {
         return;
       }
 
-      // Check if any agent is currently active
       if (this.anyAgentActive(room)) {
-        // If any agent is active, schedule another check in 1 second
         this.scheduledTimers[roomId] = setTimeout(() => {
           this.simulateConversation(roomId);
         }, 1000);
         return;
       }
 
-      // Ensure conversation counter exists for this room
       if (!this.conversationCounter[roomId]) {
         this.conversationCounter[roomId] = 0;
       }
 
-      // Select a random agent to speak next
       const availableAgents = room.agents.filter(agent => agent.status === 'idle');
       if (availableAgents.length === 0) {
-        // If no agents are available, retry later
         this.scheduledTimers[roomId] = setTimeout(() => {
           this.simulateConversation(roomId);
         }, 1000);
@@ -208,7 +191,7 @@ export const useAgentsStore = defineStore('agents', {
 
       const randomAgent = availableAgents[Math.floor(Math.random() * availableAgents.length)];
 
-      // Update agent status to "thinking" first
+      // Update agent status to "thinking"
       const updatedAgentsThinking = room.agents.map(agent => {
         if (agent.id === randomAgent.id) {
           return {
@@ -227,44 +210,34 @@ export const useAgentsStore = defineStore('agents', {
 
       // Generate a simulated message
       const message = this.generateMessage(randomAgent, room, this.conversationCounter[roomId]);
-
-      // Simulate thinking time (between 1-3 seconds)
       const thinkingTime = 1000 + Math.random() * 2000;
 
       this.scheduledTimers[roomId] = setTimeout(() => {
-        // Double-check that room still exists and agent hasn't been changed
         const updatedRoom = roomsStore.getRoomById(roomId);
         if (!updatedRoom) {
           this.activeRoomIds[roomId] = false;
           return;
         }
 
-        // Verify agent is still thinking (hasn't been changed by another action)
         const agentStillThinking = updatedRoom.agents.some(agent =>
           agent.id === randomAgent.id && agent.status === 'thinking'
         );
-
         if (!agentStillThinking) {
-          // If agent is no longer thinking, restart the process
           this.scheduledTimers[roomId] = setTimeout(() => {
             this.simulateConversation(roomId);
           }, 1000);
           return;
         }
 
-        // Check if simulation is still running
-        if (!this.isSimulationRunning || !this.activeRoomIds[roomId]) {
+        if (!this.activeRoomIds[roomId]) {
           return;
         }
 
         // Now update agent status to "speaking" and add the message
-
-        // Add message to room conversation
         if (!updatedRoom.conversation) {
           roomsStore.updateRoom(roomId, { conversation: [] });
         }
 
-        // Add session ID and isNew flag for animation control
         const newMessage = {
           id: uuidv4(),
           agentId: randomAgent.id,
@@ -273,12 +246,11 @@ export const useAgentsStore = defineStore('agents', {
           timestamp: new Date().toISOString(),
           content: message,
           isNew: true,
-          sessionId: this.sessionId // Add current session ID to identify messages created in this session
+          sessionId: this.sessionId
         };
 
         const updatedConversation = [...(updatedRoom.conversation || []), newMessage];
 
-        // Update agent status
         const updatedAgentsSpeaking = updatedRoom.agents.map(agent => {
           if (agent.id === randomAgent.id) {
             return {
@@ -296,15 +268,12 @@ export const useAgentsStore = defineStore('agents', {
         });
         roomsStore.saveRooms();
 
-        // Calculate typing time based on message length and typing speed
-        // Using the typingSpeedBase to adjust the speed
-        const charsPerMs = this.typingSpeedBase / 1000; // Convert to chars per ms
+        const charsPerMs = this.typingSpeedBase / 1000;
         const typingTime = Math.max(1500, message.length / charsPerMs);
 
-        // Reset agent status after the typing animation should be complete
+        // Reset agent status after typing animation is complete
         this.scheduledTimers[roomId] = setTimeout(() => {
-          // Check if simulation is still running
-          if (!this.isSimulationRunning || !this.activeRoomIds[roomId]) {
+          if (!this.activeRoomIds[roomId]) {
             return;
           }
 
@@ -316,10 +285,7 @@ export const useAgentsStore = defineStore('agents', {
 
           const resetAgents = currentRoom.agents.map(agent => {
             if (agent.id === randomAgent.id) {
-              return {
-                ...agent,
-                status: 'idle'
-              };
+              return { ...agent, status: 'idle' };
             }
             return agent;
           });
@@ -327,12 +293,8 @@ export const useAgentsStore = defineStore('agents', {
           roomsStore.updateRoom(roomId, { agents: resetAgents });
           roomsStore.saveRooms();
 
-          // Continue conversation after a pause
           this.conversationCounter[roomId]++;
-
-          // Natural pause between speakers (1-2 seconds)
           const pauseTime = 1000 + Math.random() * 1000;
-
           this.scheduledTimers[roomId] = setTimeout(() => {
             this.simulateConversation(roomId);
           }, pauseTime);
@@ -340,6 +302,7 @@ export const useAgentsStore = defineStore('agents', {
 
       }, thinkingTime);
     },
+
 
     // Generate a simulated message based on agent type and conversation context
     generateMessage(agent, room, counter) {
