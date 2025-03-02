@@ -176,7 +176,9 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem; /* Reduced from 0.5rem to 0.25rem vertical, 0.5rem horizontal */
+  height: 38px; /* Set a fixed, smaller height */
+  min-height: 38px; /* Ensure minimum height */
   background: linear-gradient(to right, var(--bg-tertiary), var(--bg-secondary));
   border-bottom: 1px solid var(--border-color);
   cursor: default;
@@ -198,11 +200,12 @@ onMounted(() => {
 
 .title-text {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1rem; /* Slightly reduced from 1.1rem */
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2; /* Added to reduce vertical space */
 }
 
 .title-input {
@@ -211,16 +214,24 @@ onMounted(() => {
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
-  padding: 0.25rem 0.5rem;
-  font-size: 1.1rem;
+  padding: 0.2rem 0.5rem; /* Reduced padding */
+  font-size: 1rem;
   font-weight: 600;
   text-align: center;
+  height: 24px; /* Reduced height */
 }
 
 .title-input:focus {
   outline: none;
   border-color: var(--accent-purple);
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+}
+
+/* Make buttons slightly smaller */
+:deep(.p-button.p-button-sm) {
+  width: 1.8rem; /* Smaller button size */
+  height: 1.8rem;
+  padding: 0;
 }
 
 /* Dialog styles */

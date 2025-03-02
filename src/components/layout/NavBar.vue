@@ -8,7 +8,7 @@
           <div class="logo-icon">
             <i class="pi pi-chart-line text-2xl neon-text-purple"></i>
           </div>
-          <h1 class="text-xl font-bold">InvestmentAI</h1>
+          <h1 class="text-xl font-bold">AmicAI</h1>
         </router-link>
 
         <div class="cyber-line w-32 hidden md:block"></div>

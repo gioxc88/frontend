@@ -18,7 +18,6 @@
       <div class="message-header">
         <div class="agent-info">
           <span class="agent-name">{{ message.agentName }}</span>
-          <span class="agent-type">{{ agentTypeLabel }}</span>
         </div>
 
         <div class="message-time">
@@ -27,7 +26,8 @@
       </div>
 
       <div class="message-text">
-        {{ message.content }}
+        <span v-if="message.agentId === 'user' || !shouldAnimate || isTypingComplete">{{ message.content }}</span>
+        <span v-else>{{ displayedText }}<span class="typing-cursor"></span></span>
       </div>
 
       <div class="message-actions">
@@ -52,7 +52,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { useAgentsStore } from '../../stores/agentsStore';
 
 const props = defineProps({
   message: {
@@ -67,6 +68,34 @@ const props = defineProps({
 
 // UI state
 const isExpanded = ref(false);
+const displayedText = ref('');
+const isTypingComplete = ref(false);
+const typingTimeoutId = ref(null);
+
+// Emit events
+const emit = defineEmits(['typing-progress']);
+
+// Should the message be animated?
+const shouldAnimate = computed(() => {
+  // Import the agents store to check session ID
+  const agentsStore = useAgentsStore();
+
+  // Only animate if:
+  // 1. The message is from an agent (not user)
+  // 2. The message has the current session ID (created during this browser session)
+  // 3. The message is marked as new
+  // 4. The agent is currently speaking
+  return props.message.agentId !== 'user' &&
+         props.message.sessionId === agentsStore.sessionId &&
+         props.message.isNew === true &&
+         currentAgentStatus.value === 'speaking';
+});
+
+// Get current agent status
+const currentAgentStatus = computed(() => {
+  const agent = props.agents.find(a => a.id === props.message.agentId);
+  return agent ? agent.status : 'idle';
+});
 
 // Get agent information
 const agentData = computed(() => {
@@ -119,6 +148,99 @@ const copyMessage = () => {
       console.error('Failed to copy: ', err);
     });
 };
+
+// Clean up any running animations
+const clearTypingAnimation = () => {
+  if (typingTimeoutId.value) {
+    clearTimeout(typingTimeoutId.value);
+    typingTimeoutId.value = null;
+  }
+};
+
+// Typing animation
+const startTyping = () => {
+  // Clear any existing animation
+  clearTypingAnimation();
+
+  // Skip animation for user messages or old messages
+  if (!shouldAnimate.value) {
+    displayedText.value = props.message.content;
+    isTypingComplete.value = true;
+    return;
+  }
+
+  const fullText = props.message.content;
+  displayedText.value = '';
+  isTypingComplete.value = false;
+
+  // Get the typing speed from the store or use a default
+  const baseSpeed = 40; // Characters per second (higher = faster)
+
+  // Calculate delay between characters (in milliseconds)
+  const delay = 1000 / baseSpeed;
+
+  let currentIndex = 0;
+
+  // Function to type next character
+  const typeNextChar = () => {
+    // Check if we should stop the animation
+    if (!shouldAnimate.value) {
+      displayedText.value = fullText;
+      isTypingComplete.value = true;
+      return;
+    }
+
+    if (currentIndex < fullText.length) {
+      // Add a batch of characters at once for faster typing
+      const charsToAdd = Math.min(3, fullText.length - currentIndex);
+      displayedText.value += fullText.substr(currentIndex, charsToAdd);
+      currentIndex += charsToAdd;
+
+      // Emit event for scroll adjustment
+      emit('typing-progress');
+
+      // Add variation to typing speed
+      const variationFactor = 0.5 + Math.random(); // Between 0.5 and 1.5
+      const nextDelay = delay * variationFactor;
+
+      typingTimeoutId.value = setTimeout(typeNextChar, nextDelay);
+    } else {
+      // Typing is complete
+      isTypingComplete.value = true;
+      emit('typing-progress');
+    }
+  };
+
+  // Start typing after a short initial delay
+  typingTimeoutId.value = setTimeout(typeNextChar, 200);
+};
+
+// Watch for message or agent status changes and restart animation if needed
+watch(() => [props.message, currentAgentStatus.value], () => {
+  if (shouldAnimate.value && !isTypingComplete.value) {
+    startTyping();
+  } else if (!shouldAnimate.value && !isTypingComplete.value) {
+    // If animation should stop, show the full message
+    displayedText.value = props.message.content;
+    isTypingComplete.value = true;
+  }
+}, { immediate: false, deep: true });
+
+// Clean up when component unmounts
+onUnmounted(() => {
+  clearTypingAnimation();
+});
+
+// Start typing when component is mounted
+onMounted(() => {
+  if (shouldAnimate.value) {
+    startTyping();
+  } else {
+    // Skip animation for non-animated messages
+    displayedText.value = props.message.content;
+    isTypingComplete.value = true;
+  }
+});
 </script>
 
 <style scoped>
@@ -190,6 +312,21 @@ const copyMessage = () => {
   line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: break-word;
+}
+
+.typing-cursor {
+  display: inline-block;
+  width: 0.5rem;
+  height: 1rem;
+  background-color: var(--text-primary);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 .message-actions {

@@ -18,9 +18,6 @@ export const useRoomsStore = defineStore('rooms', {
         id: uuidv4(),
         title: roomData.title || 'New Investment Room',
         type: roomData.type || 'general',
-        // Legacy position for compatibility
-        position: roomData.position || { x: 100, y: 100 },
-        size: roomData.size || { width: 600, height: 400 },
         agents: [],
         conversation: [],
         created: new Date().toISOString(),
@@ -40,21 +37,6 @@ export const useRoomsStore = defineStore('rooms', {
 
     deleteRoom(id) {
       this.rooms = this.rooms.filter(room => room.id !== id);
-    },
-
-    // Legacy position methods - kept for compatibility
-    updateRoomPosition(id, position) {
-      const room = this.getRoomById(id);
-      if (room) {
-        room.position = position;
-      }
-    },
-
-    updateRoomSize(id, size) {
-      const room = this.getRoomById(id);
-      if (room) {
-        room.size = size;
-      }
     },
 
     // Load rooms from localStorage on app initialization

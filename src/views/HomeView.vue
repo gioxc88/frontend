@@ -4,8 +4,8 @@
     <div class="container mx-auto p-4">
       <div class="welcome-card cyber-border glass">
         <div class="hero-content">
-          <h1 class="text-3xl font-bold mb-4">Welcome to InvestmentAI</h1>
-          <p class="mb-6">Your futuristic investment platform powered by AI agents</p>
+          <h1 class="text-3xl font-bold mb-4">Welcome to AmicAI</h1>
+          <p class="mb-6">Your investment platform companion powered by AI Agents</p>
 
           <router-link to="/rooms" class="cta-button">
             <i class="pi pi-arrow-right"></i>

@@ -3,15 +3,21 @@
     <!-- Background grid for cyberpunk aesthetic -->
     <div class="cyber-grid"></div>
 
-    <!-- CSS Grid layout for rooms (2 rows x 3 columns) -->
-    <div v-if="rooms.length > 0" class="rooms-grid grid grid-cols-3 grid-rows-2 gap-4">
-      <div v-for="room in rooms" :key="room.id" class="grid-item">
-        <RoomComponent
-          :room-id="room.id"
-          :is-active="activeRoomId === room.id"
-          @activate="setActiveRoom(room.id)"
-          @remove="removeRoom(room.id)"
-        />
+    <!-- Two-column layout for rooms with fixed height -->
+    <div v-if="rooms.length > 0" class="rooms-container">
+      <div class="rooms-grid">
+        <div
+          v-for="room in rooms"
+          :key="room.id"
+          class="room-cell"
+        >
+          <RoomComponent
+            :room-id="room.id"
+            :is-active="activeRoomId === room.id"
+            @activate="setActiveRoom(room.id)"
+            @remove="removeRoom(room.id)"
+          />
+        </div>
       </div>
     </div>
 
@@ -82,7 +88,7 @@ const removeRoom = (roomId) => {
   roomsStore.saveRooms();
 };
 
-// Handle room creation – new rooms simply appear in the grid based on order
+// Handle room creation – new rooms simply appear in the grid
 const onRoomCreated = (roomId) => {
   activeRoomId.value = roomId;
 };
@@ -112,9 +118,10 @@ const saveRooms = () => {
   position: relative;
   width: 100%;
   height: calc(100vh - 64px); /* Adjust based on navbar height */
-  overflow: auto;
   background-color: var(--bg-primary);
   padding: 1rem;
+  overflow-y: auto; /* Only one scrollbar at the outer container */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 .cyber-grid {
@@ -128,18 +135,29 @@ const saveRooms = () => {
   opacity: 0.15;
 }
 
-.rooms-grid {
+.rooms-container {
   position: relative;
   z-index: 1;
-  min-height: 100%;
+  width: 75%; /* Changed to 75% as requested */
+  max-width: 75%;
+  margin-left: 0; /* Align to the left */
+  margin-right: auto; /* Allow space on the right */
+  overflow: visible; /* Remove scrollbar from this container */
+}
+
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* Allow columns to shrink */
+  gap: 1rem;
   width: 100%;
 }
 
-.grid-item {
-  transition: all 200ms ease;
-  transition-property: left, top;
-  height: 100%;
+.room-cell {
+  height: 50vh; /* Fixed height at 40% of viewport height */
   width: 100%;
+  min-width: 0; /* Allow content to shrink below its intrinsic width */
+  margin-bottom: 1rem;
+  transition: all 200ms ease;
 }
 
 /* Empty state styling */
@@ -158,6 +176,13 @@ const saveRooms = () => {
   box-shadow: var(--shadow-md);
   max-width: 450px;
   animation: fadeIn 0.5s ease-in-out;
+}
+
+.fixed-add-button {
+  position: fixed;
+  right: 2rem;
+  bottom: 2rem;
+  z-index: 10;
 }
 
 @keyframes fadeIn {
@@ -179,12 +204,23 @@ const saveRooms = () => {
   background-position: center center;
 }
 
-:deep(.dark-theme) .vue-grid-item {
-  background-color: transparent;
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .rooms-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+  }
 }
 
-:deep(.dark-theme) .vue-grid-item.vue-grid-placeholder {
-  background: var(--accent-purple);
-  opacity: 0.2;
+@media (max-width: 640px) {
+  .rooms-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .room-cell {
+    height: auto;
+    min-height: 400px;
+  }
 }
 </style>

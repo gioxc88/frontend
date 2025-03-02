@@ -9,7 +9,7 @@
       </div>
     </div>
 
-    <p-divider />
+    <p-divider class="compact-divider" />
 
     <div v-if="agents.length === 0" class="no-agents">
       <i class="pi pi-user-plus"></i>
@@ -54,7 +54,8 @@ defineProps({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0; /* Reduced from 0.5rem to 0.25rem */
+  margin-bottom: 0; /* Added to remove extra space */
 }
 
 .agents-header h3 {
@@ -76,19 +77,29 @@ defineProps({
   font-weight: 600;
 }
 
+/* Make divider more compact */
+.compact-divider {
+  margin: 0.25rem 0; /* Reduced spacing around divider */
+}
+
+:deep(.p-divider.p-divider-horizontal) {
+  margin: 0.25rem 0; /* Override PrimeVue divider margins */
+  padding: 0;
+}
+
 .no-agents {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 2rem 0;
+  padding: 1rem 0; /* Reduced from 2rem to 1rem */
   color: var(--text-secondary);
 }
 
 .no-agents i {
   font-size: 2rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem; /* Reduced from 1rem to 0.5rem */
   opacity: 0.7;
 }
 
@@ -101,8 +112,8 @@ defineProps({
 .agents-grid {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 0.5rem 0;
+  gap: 0.75rem; /* Reduced from 1rem to 0.75rem */
+  padding: 0.25rem 0; /* Reduced from 0.5rem to 0.25rem */
 }
 
 /* Adjust for smaller column width */
