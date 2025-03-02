@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Investment Company</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+  <style>
+    body {
+      background-color: #0a0a1a;
+      color: #e0e0ff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
+      gap: 16px;
+      height: 100vh;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    .room {
+      background: linear-gradient(135deg, rgba(25, 25, 50, 0.8), rgba(15, 15, 35, 0.9));
+      border: 1px solid rgba(100, 100, 255, 0.3);
+      box-shadow: 0 0 15px rgba(80, 80, 255, 0.2);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 100%;
+      position: relative;
+    }
+
+    .room:hover {
+      box-shadow: 0 0 25px rgba(100, 100, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .room-content {
+      display: flex;
+      flex-direction: row;
+      flex-grow: 1;
+      overflow: hidden;
+      height: calc(100% - 30px); /* Subtract the exact height of room title */
+    }
+
+    .agents-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start; /* Align to the top */
+      align-items: center;
+      padding: 10px;
+      gap: 15px;
+      width: 80px;
+      min-width: 80px; /* Prevent shrinking */
+      background: rgba(20, 20, 40, 0.5);
+      height: 100%;
+    }
+
+    .agent-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      margin-top: 10px; /* Add space at the top */
+    }
+
+    .agent-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 150, 255, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Different colors for each avatar */
+    .economist-avatar {
+      background: linear-gradient(135deg, #304FFE, #00B0FF);
+    }
+
+    .pm-avatar {
+      background: linear-gradient(135deg, #6200EA, #B388FF);
+    }
+
+    .quant-avatar {
+      background: linear-gradient(135deg, #00BFA5, #1DE9B6);
+    }
+
+    .rm-avatar {
+      background: linear-gradient(135deg, #FF6D00, #FFAB40);
+    }
+
+    .trader-avatar {
+      background: linear-gradient(135deg, #2962FF, #82B1FF);
+    }
+
+    .ta-avatar {
+      background: linear-gradient(135deg, #DD2C00, #FF9E80);
+    }
+
+    .cio-avatar {
+      background: linear-gradient(135deg, #00C853, #69F0AE);
+    }
+
+    .ceo-avatar {
+      background: linear-gradient(135deg, #D500F9, #EA80FC);
+    }
+
+    .agent-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .agent-name {
+      font-size: 0.7rem;
+      text-align: center;
+      margin-top: 5px;
+      color: #aafaff;
+      text-shadow: 0 0 5px rgba(0, 150, 255, 0.5);
+      width: 100%;
+      white-space: nowrap; /* Prevent line breaks */
+      overflow: visible; /* Allow text to overflow */
+    }
+
+    .room-title {
+      border-bottom: 1px solid rgba(100, 100, 255, 0.3);
+      padding: 0;
+      color: #50d0ff;
+      text-shadow: 0 0 5px rgba(80, 208, 255, 0.5);
+      text-align: center;
+      background: rgba(20, 20, 45, 0.7);
+      font-size: 0.9rem;
+      height: 30px; /* Fixed height */
+      line-height: 30px; /* Match height for vertical centering */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chat-output {
+      flex-grow: 1;
+      overflow-y: auto;
+      background-color: rgba(15, 15, 30, 0.7);
+      border-radius: 0;
+      padding: 10px 10px 25px 10px; /* Increased bottom padding */
+      font-family: monospace;
+      color: #a0f0ff;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(100, 100, 255, 0.5) rgba(30, 30, 60, 0.3);
+      height: 100%; /* Set fixed height */
+      flex-basis: 0; /* Prevent flex basis from affecting width */
+    }
+
+    .chat-output::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-output::-webkit-scrollbar-track {
+      background: rgba(30, 30, 60, 0.3);
+      border-radius: 4px;
+    }
+
+    .chat-output::-webkit-scrollbar-thumb {
+      background-color: rgba(100, 100, 255, 0.5);
+      border-radius: 4px;
+    }
+
+    .chat-line {
+      margin-bottom: 8px;
+      animation: fadeIn 0.5s;
+    }
+
+    .agent-speaking {
+      color: #ffffff;
+      font-weight: bold;
+    }
+
+    .active-avatar {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+      border-color: #00ffff;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulsate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .agent-typing::after {
+      content: '|';
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    /* Add some futuristic accents */
+    .room::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.5), transparent);
+      animation: scanline 4s linear infinite;
+    }
+
+    @keyframes scanline {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Add animation for live values */
+    .live-value {
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .live-value.updating {
+      animation: value-pulse 0.6s ease;
+    }
+
+    @keyframes value-pulse {
+      0% { color: inherit; }
+      30% { color: #00ffff; text-shadow: 0 0 8px rgba(0, 255, 255, 0.8); }
+      100% { color: inherit; }
+    }
+
+    /* Additional animations for active agents */
+    .animate-pulse {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Split container for holdings and chart */
+    .split-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Portfolio table styles */
+    .portfolio-table-container {
+      width: 100%;
+      overflow-y: auto;
+      padding: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(100, 100, 255, 0.5) rgba(30, 30, 60, 0.3);
+      position: relative;
+      background-color: rgba(15, 15, 30, 0.7);
+    }
+
+    .portfolio-table-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .portfolio-table-container::-webkit-scrollbar-track {
+      background: rgba(30, 30, 60, 0.3);
+      border-radius: 4px;
+    }
+
+    .portfolio-table-container::-webkit-scrollbar-thumb {
+      background-color: rgba(100, 100, 255, 0.5);
+      border-radius: 4px;
+    }
+
+    .portfolio-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      color: #a0f0ff;
+      font-family: monospace;
+    }
+
+    .portfolio-table th,
+    .portfolio-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(100, 100, 255, 0.2);
+    }
+
+    .portfolio-table th {
+      background-color: rgba(20, 20, 45, 0.8);
+      color: #50d0ff;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(80, 208, 255, 0.5);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .portfolio-table tr:hover {
+      background-color: rgba(40, 40, 80, 0.4);
+    }
+
+    .portfolio-table tr.total-row {
+      font-weight: bold;
+      background-color: rgba(30, 30, 60, 0.6);
+      border-top: 2px solid rgba(100, 100, 255, 0.4);
+    }
+
+    .text-green-400 {
+      color: #4ade80;
+    }
+
+    .text-red-400 {
+      color: #f87171;
+    }
+
+    .text-gray-400 {
+      color: #9ca3af;
+    }
+
+    .text-cyan-400 {
+      color: #22d3ee;
+    }
+
+    /* Chat spacer to ensure bottom padding */
+    .chat-spacer {
+      height: 20px;
+      width: 100%;
+    }
+
+    /* Chart container styles */
+    .chart-container {
+      width: 100%;
+      height: 50%;
+      padding: 10px;
+      background-color: rgba(15, 15, 30, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Value change animations */
+    .value-increase {
+      animation: value-increase 1s ease;
+    }
+
+    .value-decrease {
+      animation: value-decrease 1s ease;
+    }
+
+    @keyframes value-increase {
+      0% { color: inherit; }
+      30% { color: #4ade80; text-shadow: 0 0 8px rgba(74, 222, 128, 0.8); }
+      100% { color: inherit; }
+    }
+
+    @keyframes value-decrease {
+      0% { color: inherit; }
+      30% { color: #f87171; text-shadow: 0 0 8px rgba(248, 113, 113, 0.8); }
+      100% { color: inherit; }
+    }
+
+    /* Ticker/counter animation */
+    .ticker-animation {
+      display: inline-block;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ticker-animation .old-value,
+    .ticker-animation .new-value {
+      display: inline-block;
+      position: absolute;
+      left: 0;
+      width: 100%;
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .ticker-animation .old-value {
+      transform: translateY(0);
+    }
+
+    .ticker-animation .new-value {
+      transform: translateY(100%);
+    }
+
+    .ticker-animation.animate .old-value {
+      transform: translateY(-100%);
+    }
+
+    .ticker-animation.animate .new-value {
+      transform: translateY(0);
+    }
+
+    /* Modern Control Room styles */
+    .chat-control-modern {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      height: 100%;
+      width: 100%;
+    }
+
+    .control-chat {
+      height: calc(100% - 70px);
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+    }
+
+    .message-content {
+      padding: 10px 15px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      position: relative;
+      max-width: 85%;
+      word-wrap: break-word;
+    }
+
+    .user-message {
+      align-self: flex-end;
+      text-align: right;
+    }
+
+    .user-bubble {
+      background: linear-gradient(135deg, rgba(0, 150, 255, 0.7), rgba(0, 80, 200, 0.8));
+      color: white;
+      border-bottom-right-radius: 2px;
+      margin-left: auto;
+      box-shadow: 0 2px 8px rgba(0, 150, 255, 0.3);
+    }
+
+    .agent-bubble {
+      background: linear-gradient(135deg, rgba(40, 40, 80, 0.8), rgba(30, 30, 60, 0.9));
+      color: #e0e0ff;
+      border-bottom-left-radius: 2px;
+      margin-right: auto;
+      box-shadow: 0 2px 8px rgba(50, 50, 150, 0.2);
+    }
+
+    .agent-name-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: bold;
+      margin-bottom: 3px;
+      color: #50d0ff;
+    }
+
+    .system-message .message-content {
+      background: linear-gradient(135deg, rgba(60, 60, 100, 0.7), rgba(40, 40, 80, 0.8));
+      color: #a0f0ff;
+      text-align: center;
+      margin: 5px auto;
+      font-style: italic;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 8px rgba(50, 50, 150, 0.1);
+    }
+
+    .input-container-modern {
+      display: flex;
+      padding: 15px;
+      background-color: rgba(20, 20, 40, 0.7);
+      border-top: 1px solid rgba(100, 100, 255, 0.2);
+      height: 70px;
+      align-items: center;
+    }
+
+    .user-input-modern {
+      flex-grow: 1;
+      background-color: rgba(25, 25, 50, 0.8);
+      border: 1px solid rgba(100, 100, 255, 0.3);
+      border-radius: 20px;
+      color: #e0e0ff;
+      padding: 12px 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      resize: none;
+      margin-right: 10px;
+      height: 45px;
+      transition: all 0.3s ease;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .user-input-modern:focus {
+      outline: none;
+      border-color: rgba(0, 200, 255, 0.5);
+      box-shadow: 0 0 15px rgba(0, 200, 255, 0.2), inset 0 0 10px rgba(0, 0, 0, 0.2);
+      background-color: rgba(30, 30, 60, 0.9);
+    }
+
+    /* Redesigned discrete futuristic button */
+    .futuristic-button {
+      min-width: 70px;
+      height: 35px;
+      background: linear-gradient(135deg, rgba(30, 50, 80, 0.8), rgba(20, 30, 60, 0.9));
+      border: 1px solid rgba(60, 100, 160, 0.4);
+      border-radius: 6px;
+      color: #a0f0ff;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 8px rgba(0, 100, 200, 0.2);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      letter-spacing: 1px;
+      font-size: 0.7rem;
+    }
+
+    .futuristic-button::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      background: linear-gradient(45deg, #1a3b5c, #2a5a8c, #1a3b5c);
+      z-index: -1;
+      border-radius: 7px;
+      opacity: 0.3;
+      animation: border-glow 3s linear infinite;
+    }
+
+    .futuristic-button::after {
+      content: '';
+      position: absolute;
+      width: 150%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(80, 180, 255, 0.1), transparent);
+      transform: translateX(-100%);
+      animation: light-effect 3s infinite;
+    }
+
+    .futuristic-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 10px rgba(0, 120, 200, 0.3);
+      background: linear-gradient(135deg, rgba(35, 60, 95, 0.9), rgba(25, 40, 75, 1));
+    }
+
+    .futuristic-button:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 5px rgba(0, 100, 180, 0.2);
+    }
+
+    .send-icon {
+      margin-left: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes light-effect {
+      0% { transform: translateX(-100%); }
+      40%, 100% { transform: translateX(100%); }
+    }
+
+    @keyframes border-glow {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 0.9; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="grid-container">
+      <!-- Room 1: Economist and Portfolio Manager (row 1, col 1) -->
+      <div class="room" style="grid-row: 1; grid-column: 1 / 2;">
+        <div class="room-title">Strategy Room</div>
+        <div class="room-content">
+          <div class="agents-container">
+            <div class="agent-wrapper" :class="{'animate-pulse': activeAgents.includes('Economist')}">
+              <div class="agent-avatar economist-avatar" :class="{'active-avatar': activeAgents.includes('Economist')}">
+                <div class="flex items-center justify-center h-full text-xs font-bold">E</div>
+              </div>
+              <div class="agent-name">Economist</div>
+            </div>
+            <div class="agent-wrapper" :class="{'animate-pulse': activeAgents.includes('PortfolioManager')}">
+              <div class="agent-avatar pm-avatar" :class="{'active-avatar': activeAgents.includes('PortfolioManager')}">
+                <div class="flex items-center justify-center h-full text-xs font-bold">PM</div>
+              </div>
+              <div class="agent-name">Portfolio Manager</div>
+            </div>
+          </div>
+          <div class="chat-output" ref="chatRoom1">
+            <div v-for="(message, index) in room1Chat" :key="index" class="chat-line">
+              <span class="agent-speaking">{{ message.agent }}:</span> {{ message.text }}
+            </div>
+            <!-- Invisible spacer element -->
+            <div class="chat-spacer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room 2: Quant and Risk Manager (row 1, col 2) -->
+      <div class="room" style="grid-row: 1; grid-column: 2 / 3;">
+        <div class="room-title">Analytics Room</div>
+        <div class="room-content">
+          <div class="agents-container">
+            <div class="agent-wrapper" :class="{'animate-pulse': activeAgents.includes('Quant')}">
+              <div class="agent-avatar quant-avatar" :class="{'active-avatar': activeAgents.includes('Quant')}">
+                <div class="flex items-center justify-center h-full text-xs font-bold">Q</div>
+              </div>
+              <div class="agent-name">Quant</div>
+            </div>
+            <div class="agent-wrapper" :class="{'animate-pulse': activeAgents.includes('RiskManager')}">
+              <div class="agent-avatar rm-avatar" :class="{'active-avatar': activeAgents.includes('RiskManager')}">
+                <div class="flex items-center justify-center h-full text-xs font-bold">RM</div>
+              </div>
+              <div class="agent-name">Risk Manager</div>
+            </div>
+          </div>
+          <div class="chat-output" ref="chatRoom2">
+            <div v-for="(message, index) in room2Chat" :key="index" class="chat-line">
+              <span class="agent-speaking">{{ message.agent }}:</span> {{ message.text }}
+            </div>
+            <!-- Invisible spacer element -->
+            <div class="chat-spacer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Portfolio Overview (column 3, spans all 3 rows) -->
+      <div class="room" style="grid-column: 3; grid-row: 1 / span 3;">
+        <div class="room-title">Portfolio Overview</div>
+        <div class="room-content" style="display: flex; flex-direction: column; height: 100%;">
+          <!-- Portfolio Table Section - Top Half -->
+          <div style="flex: 1; overflow: hidden; position: relative; border-bottom: 1px solid rgba(100, 100, 255, 0.3); margin-bottom: 10px;">
+            <!-- Table header - Fixed position -->
+            <div style="position: absolute; top: 0; left: 0; right: 0; background-color: rgba(20, 20, 45, 0.8); z-index: 5;">
+              <table class="portfolio-table" style="width: 100%; border-collapse: collapse; margin: 0;">
+                <thead>
+                  <tr>
+                    <th style="background-color: rgba(20, 20, 45, 0.8); color: #50d0ff; font-weight: bold; text-shadow: 0 0 5px rgba(80, 208, 255, 0.5); padding: 10px; text-align: left; border-bottom: 1px solid rgba(100, 100, 255, 0.2);">Asset</th>
+                    <th style="background-color: rgba(20, 20, 45, 0.8); color: #50d0ff; font-weight: bold; text-shadow: 0 0 5px rgba(80, 208, 255, 0.5); padding: 10px; text-align: left; border-bottom: 1px solid rgba(100, 100, 255, 0.2);">Allocation</th>
+                    <th style="background-color: rgba(20, 20, 45, 0.8); color: #50d0ff; font-weight: bold; text-shadow: 0 0 5px rgba(80, 208, 255, 0.5); padding: 10px; text-align: left; border-bottom: 1px solid rgba(100, 100, 255, 0.2);">Performance</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+
+            <!-- Table body - Scrollable -->
+            <div style="height: 100%; overflow-y: auto; padding-top: 40px; background-color: rgba(15, 15, 30, 0.7);">
+              <table class="portfolio-table" style="width: 100%; border-collapse: collapse;">
+                <tbody>
+                  <tr v-for="asset in portfolioAssets" :key="asset.name">
+                    <td style="padding: 10px; text-align: left; border-bottom: 1px solid rgba(100, 100, 255, 0.2);">{{ asset.name }}</td>
+                    <td style="padding: 10px; text-align: left; border-bottom: 1px solid rgba(100, 100, 255, 0.2);"
+                        :class="{'live-value': true, 'updating': asset.allocationUpdating}">
+                      {{ asset.allocation }}%
+                    </td>
+                    <td style="padding: 10px; text-align: left; border-bottom: 1px solid rgba(100, 100, 255, 0.2);"
+                        :class="{'live-value': true, 'updating': asset.performanceUpdating,
+                                'text-green-400': asset.performance > 0,
+                                'text-red-400': asset.performance < 0,
+                                'text-gray-400': asset.performance === 0}">
+                      {{ asset.performance > 0 ? '+' : '' }}{{ asset.performance.toFixed(1) }}%
+                    </td>
+                  </tr>
+                  <tr style="font-weight: bold; background-color: rgba(30, 30, 60, 0.6); border-top: 2px solid rgba(100, 100, 255, 0.4);">
+                    <td style="padding: 10px; text-align: left; border-bottom: 1px solid rgba(100, 100, 255, 0.2);">Total Portfolio</td>
+                    <td style="padding: 10px; text-align: left; border-bottom: 1px solid rgba(100, 100, 255, 0.2);">100%</td>
+                    <td style="padding: 10px; text-align: left; border-bottom: 1px solid rgba(100, 100, 255, 0.2);"
+                        :class="{'text-cyan-400': true, 'live-value': true, 'updating': totalPerformanceUpdating}">
+                      {{ totalPerformance > 0 ? '+' : '' }}{{ totalPerformance.toFixed(1) }}%
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Chart Section - Bottom Half -->
+          <div style="flex: 1; position: relative; background-color: rgba(15, 15, 30, 0.7); margin-top: 10px;">
+            <div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; padding: 10px; box-sizing: border-box;">
+              <canvas id="pnlChart" style="width: 100%; height: 100%;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room 3: Execution Trader and Technical Analyst (row 2, col 1) -->
+      <div class="room" style="grid-row: 2; grid-column: 1 / 2;">
+        <div class="room-title">Trading Room</div>
+        <div class="room-content">
+          <div class="agents-container">
+            <div class="agent-wrapper" :class="{'animate-pulse': activeAgents.includes('Trader')}">
+              <div class="agent-avatar trader-avatar" :class="{'active-avatar': activeAgents.includes('Trader')}">
+                <div class="flex items-center justify-center h-full text-xs font-bold">T</div>
+              </div>
+              <div class="agent-name">Trader</div>
+            </div>
+            <div class="agent-wrapper" :class="{'animate-pulse': activeAgents.includes('TechnicalAnalyst')}">
+              <div class="agent-avatar ta-avatar" :class="{'active-avatar': activeAgents.includes('TechnicalAnalyst')}">
+                <div class="flex items-center justify-center h-full text-xs font-bold">TA</div>
+              </div>
+              <div class="agent-name">Technical Analyst</div>
+            </div>
+          </div>
+          <div class="chat-output" ref="chatRoom3">
+            <div v-for="(message, index) in room3Chat" :key="index" class="chat-line">
+              <span class="agent-speaking">{{ message.agent }}:</span> {{ message.text }}
+            </div>
+            <!-- Invisible spacer element -->
+            <div class="chat-spacer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room 4: CIO and CEO (row 2, col 2) -->
+      <div class="room" style="grid-row: 2; grid-column: 2 / 3;">
+        <div class="room-title">Executive Suite</div>
+        <div class="room-content">
+          <div class="agents-container">
+            <div class="agent-wrapper" :class="{'animate-pulse': activeAgents.includes('CIO')}">
+              <div class="agent-avatar cio-avatar" :class="{'active-avatar': activeAgents.includes('CIO')}">
+                <div class="flex items-center justify-center h-full text-xs font-bold">CIO</div>
+              </div>
+              <div class="agent-name">CIO</div>
+            </div>
+            <div class="agent-wrapper" :class="{'animate-pulse': activeAgents.includes('CEO')}">
+              <div class="agent-avatar ceo-avatar" :class="{'active-avatar': activeAgents.includes('CEO')}">
+                <div class="flex items-center justify-center h-full text-xs font-bold">CEO</div>
+              </div>
+              <div class="agent-name">CEO</div>
+            </div>
+          </div>
+          <div class="chat-output" ref="chatRoom4">
+            <div v-for="(message, index) in room4Chat" :key="index" class="chat-line">
+              <span class="agent-speaking">{{ message.agent }}:</span> {{ message.text }}
+            </div>
+            <!-- Invisible spacer element -->
+            <div class="chat-spacer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- This div is now removed since we're using span 3 -->
+      <div style="display: none;"></div>
+
+      <!-- Control Room (row 3, col 1) -->
+      <div class="room" style="grid-row: 3; grid-column: 1 / 2;">
+        <div class="room-title">Control Room</div>
+        <div class="room-content">
+          <div class="chat-control-modern">
+            <div class="chat-output control-chat" ref="chatRoom5">
+              <div v-for="(message, index) in controlChat" :key="index" class="chat-line" :class="{'user-message': message.agent === 'User', 'system-message': message.agent === 'System'}">
+                <div class="message-content" :class="{'user-bubble': message.agent === 'User', 'agent-bubble': message.agent !== 'User' && message.agent !== 'System'}">
+                  <span v-if="message.agent !== 'User'" class="agent-name-label">{{ message.agent }}</span>
+                  {{ message.text }}
+                </div>
+              </div>
+              <!-- Invisible spacer element -->
+              <div class="chat-spacer"></div>
+            </div>
+            <div class="input-container-modern">
+              <textarea
+                v-model="userMessage"
+                class="user-input-modern"
+                placeholder="Type your instructions to agents..."
+                @keyup.enter="sendMessage"
+              ></textarea>
+              <button @click="sendMessage" class="futuristic-button">
+                SEND
+                <div class="send-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Action Plan Room (row 3, col 2) -->
+      <div class="room" style="grid-row: 3; grid-column: 2 / 3;">
+        <div class="room-title">Action Plan</div>
+        <div class="room-content">
+          <div class="chat-output" style="width: 100%; overflow-y: auto; padding: 15px;">
+            <div style="font-size: 0.85rem; color: #a0f0ff; margin-bottom: 15px; text-align: center;">
+              Strategic Initiatives for Q2 2025
+            </div>
+
+            <!-- Fancy animated bullet points -->
+            <div style="margin-bottom: 12px; display: flex; align-items: flex-start; animation: fadeIn 0.5s;">
+              <div style="min-width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #304FFE, #00B0FF); margin-right: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px rgba(0, 150, 255, 0.5);">
+                <div style="color: white; font-size: 12px; font-weight: bold;">1</div>
+              </div>
+              <div>
+                <div style="color: #50d0ff; margin-bottom: 4px; font-weight: bold;">Increase Healthcare Allocation</div>
+                <div style="color: #e0e0ff; font-size: 0.8rem;">Increase exposure to healthcare innovation by 3.5% with focus on genomics and AI-driven diagnostics.</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 12px; display: flex; align-items: flex-start; animation: fadeIn 0.6s;">
+              <div style="min-width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #6200EA, #B388FF); margin-right: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px rgba(98, 0, 234, 0.5);">
+                <div style="color: white; font-size: 12px; font-weight: bold;">2</div>
+              </div>
+              <div>
+                <div style="color: #50d0ff; margin-bottom: 4px; font-weight: bold;">Reduce Small-Cap Tech Exposure</div>
+                <div style="color: #e0e0ff; font-size: 0.8rem;">Decrease allocation by 2.2% to mitigate volatility risk in an uncertain rate environment.</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 12px; display: flex; align-items: flex-start; animation: fadeIn 0.7s;">
+              <div style="min-width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #00BFA5, #1DE9B6); margin-right: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px rgba(0, 191, 165, 0.5);">
+                <div style="color: white; font-size: 12px; font-weight: bold;">3</div>
+              </div>
+              <div>
+                <div style="color: #50d0ff; margin-bottom: 4px; font-weight: bold;">Implement Hedging Strategy</div>
+                <div style="color: #e0e0ff; font-size: 0.8rem;">Purchase index puts as tactical hedge against potential market correction. Cost not to exceed 0.3% of AUM.</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 12px; display: flex; align-items: flex-start; animation: fadeIn 0.8s;">
+              <div style="min-width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #FF6D00, #FFAB40); margin-right: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px rgba(255, 109, 0, 0.5);">
+                <div style="color: white; font-size: 12px; font-weight: bold;">4</div>
+              </div>
+              <div>
+                <div style="color: #50d0ff; margin-bottom: 4px; font-weight: bold;">Increase Quality Factor Tilt</div>
+                <div style="color: #e0e0ff; font-size: 0.8rem;">Reweight equity allocations to emphasize companies with strong cash flows and lower debt levels.</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 12px; display: flex; align-items: flex-start; animation: fadeIn 0.9s;">
+              <div style="min-width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #2962FF, #82B1FF); margin-right: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px rgba(41, 98, 255, 0.5);">
+                <div style="color: white; font-size: 12px; font-weight: bold;">5</div>
+              </div>
+              <div>
+                <div style="color: #50d0ff; margin-bottom: 4px; font-weight: bold;">Explore Private Credit Opportunities</div>
+                <div style="color: #e0e0ff; font-size: 0.8rem;">Allocate 1.5% to private credit strategies focusing on secured senior loans with floating rates.</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 12px; display: flex; align-items: flex-start; animation: fadeIn 1.0s;">
+              <div style="min-width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #DD2C00, #FF9E80); margin-right: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px rgba(221, 44, 0, 0.5);">
+                <div style="color: white; font-size: 12px; font-weight: bold;">6</div>
+              </div>
+              <div>
+                <div style="color: #50d0ff; margin-bottom: 4px; font-weight: bold;">Optimize Tax Efficiency</div>
+                <div style="color: #e0e0ff; font-size: 0.8rem;">Implement tax-loss harvesting across portfolios to offset gains. Estimated annual benefit: 0.4-0.7%.</div>
+              </div>
+            </div>
+
+            <!-- Status indicator -->
+            <div style="margin-top: 20px; text-align: center; color: #50d0ff; font-size: 0.8rem; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 10px; height: 10px; background-color: #4ade80; border-radius: 50%; margin-right: 8px; animation: pulse 2s infinite;"></div>
+              <div>Implementation in progress: 35% complete</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="grid-row: 3; grid-column: 3 / 4; visibility: hidden;"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script>
+    const { createApp, ref, onMounted, nextTick } = Vue;
+
+    createApp({
+      setup() {
+        const room1Chat = ref([]);
+        const room2Chat = ref([]);
+        const room3Chat = ref([]);
+        const room4Chat = ref([]);
+        const controlChat = ref([]);
+        const activeAgents = ref([]);
+        const userMessage = ref('');
+        const chatRoom1 = ref(null);
+        const chatRoom2 = ref(null);
+        const chatRoom3 = ref(null);
+        const chatRoom4 = ref(null);
+        const chatRoom5 = ref(null);
+        let pnlChart = null;
+        let pnlData = [];
+
+        // Portfolio assets with reactive properties
+        const portfolioAssets = ref([
+          { name: "Tech Large Cap", allocation: 18.5, performance: 7.2, allocationUpdating: false, performanceUpdating: false },
+          { name: "Healthcare", allocation: 15.7, performance: 4.8, allocationUpdating: false, performanceUpdating: false },
+          { name: "Consumer Staples", allocation: 12.3, performance: 2.1, allocationUpdating: false, performanceUpdating: false },
+          { name: "Financial Services", allocation: 10.5, performance: -1.3, allocationUpdating: false, performanceUpdating: false },
+          { name: "Luxury Goods", allocation: 9.8, performance: 5.6, allocationUpdating: false, performanceUpdating: false },
+          { name: "Utilities", allocation: 8.5, performance: 1.8, allocationUpdating: false, performanceUpdating: false },
+          { name: "Real Estate", allocation: 7.2, performance: -2.4, allocationUpdating: false, performanceUpdating: false },
+          { name: "Tech Small Cap", allocation: 6.5, performance: -3.7, allocationUpdating: false, performanceUpdating: false },
+          { name: "Energy", allocation: 5.8, performance: 3.2, allocationUpdating: false, performanceUpdating: false },
+          { name: "Cash", allocation: 5.2, performance: 0.2, allocationUpdating: false, performanceUpdating: false }
+        ]);
+
+        // Total portfolio performance
+        const totalPerformance = ref(2.8);
+        const totalPerformanceUpdating = ref(false);
+
+        // Function to generate random PNL data
+        const generatePnlData = () => {
+          const labels = [];
+          const data = [];
+          let value = 0;
+
+          // Generate data for the last 30 days
+          for (let i = 30; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+            // Generate random movement but with a slight upward bias
+            const change = (Math.random() * 2 - 0.9) * 2; // Bias towards positive
+            value += change;
+            data.push(value);
+          }
+
+          return { labels, data };
+        };
+
+        // Function to initialize and update the PNL chart
+        const initChart = () => {
+          const { labels, data } = generatePnlData();
+          pnlData = { labels, data };
+
+          const ctx = document.getElementById('pnlChart').getContext('2d');
+
+          // Create gradient for chart
+          const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+          gradient.addColorStop(0, 'rgba(0, 200, 255, 0.6)');
+          gradient.addColorStop(1, 'rgba(0, 100, 255, 0.05)');
+
+          pnlChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Portfolio PNL',
+                data: data,
+                borderColor: 'rgba(0, 180, 255, 1)',
+                borderWidth: 3,
+                pointRadius: 0, // Remove markers
+                pointHoverRadius: 6,
+                tension: 0.4, // More curve on the line
+                fill: true,
+                backgroundColor: gradient
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: {
+                duration: 1500,
+                easing: 'easeOutQuart'
+              },
+              plugins: {
+                legend: {
+                  display: false
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(20, 20, 45, 0.9)',
+                  titleColor: '#50d0ff',
+                  bodyColor: '#ffffff',
+                  borderColor: 'rgba(100, 100, 255, 0.3)',
+                  borderWidth: 1,
+                  padding: 10,
+                  displayColors: false,
+                  callbacks: {
+                    label: (context) => {
+                      let label = context.dataset.label || '';
+                      if (label) {
+                        label += ': ';
+                      }
+                      if (context.parsed.y !== null) {
+                        label += context.parsed.y.toFixed(2);
+                      }
+                      return label;
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: {
+                    color: 'rgba(100, 100, 255, 0.1)',
+                    borderColor: 'rgba(100, 100, 255, 0.3)',
+                    tickColor: 'rgba(100, 100, 255, 0.3)'
+                  },
+                  ticks: {
+                    color: '#a0f0ff',
+                    font: {
+                      size: 10
+                    },
+                    maxRotation: 45,
+                    minRotation: 45
+                  }
+                },
+                y: {
+                  grid: {
+                    color: 'rgba(100, 100, 255, 0.1)',
+                    borderColor: 'rgba(100, 100, 255, 0.3)',
+                    tickColor: 'rgba(100, 100, 255, 0.3)'
+                  },
+                  ticks: {
+                    color: '#a0f0ff',
+                    font: {
+                      size: 10
+                    }
+                  }
+                }
+              }
+            }
+          });
+
+          // Start updating chart with live data
+          startLiveUpdates();
+        };
+
+        // Function to update the chart with live data
+        const updateChart = () => {
+          if (!pnlChart) return;
+
+          // Add a new data point
+          const newDate = new Date();
+          pnlData.labels.push(newDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }));
+
+          // Calculate new value based on last value with some randomness
+          const lastValue = pnlData.data[pnlData.data.length - 1];
+          const change = (Math.random() * 2 - 0.9) * 2; // Bias towards positive
+          const newValue = lastValue + change;
+          pnlData.data.push(newValue);
+
+          // Remove oldest data point to keep the chart looking neat
+          if (pnlData.labels.length > 30) {
+            pnlData.labels.shift();
+            pnlData.data.shift();
+          }
+
+          // Update chart
+          pnlChart.data.labels = pnlData.labels;
+          pnlChart.data.datasets[0].data = pnlData.data;
+          pnlChart.update();
+        };
+
+        // Function to update a single portfolio asset
+        const updatePortfolioAsset = (index, smallChangesOnly = false) => {
+          if (index >= portfolioAssets.value.length) return;
+
+          const asset = portfolioAssets.value[index];
+
+          // Update performance with a random change
+          // More volatility for certain assets
+          let volatilityFactor = 1.0;
+          if (asset.name.includes('Tech')) volatilityFactor = 1.5;
+          if (asset.name.includes('Energy')) volatilityFactor = 1.3;
+          if (asset.name.includes('Cash')) volatilityFactor = 0.1;
+
+          // Smaller changes when updating every second
+          const changeMultiplier = smallChangesOnly ? 0.1 : 1.0;
+          const performanceChange = (Math.random() * 0.4 - 0.15) * volatilityFactor * changeMultiplier;
+          const oldPerformance = asset.performance;
+          const newPerformance = parseFloat((oldPerformance + performanceChange).toFixed(1));
+
+          // Trigger update animation
+          asset.performanceUpdating = true;
+          asset.performance = newPerformance;
+
+          // Reset animation flag after animation completes
+          setTimeout(() => {
+            asset.performanceUpdating = false;
+          }, 400); // Faster animation for more frequent updates
+
+          // Occasionally update allocation too (less frequently)
+          if (Math.random() < (smallChangesOnly ? 0.05 : 0.2)) {
+            const allocationChange = (Math.random() * 0.4 - 0.2).toFixed(1) * (smallChangesOnly ? 0.5 : 1.0);
+            const oldAllocation = asset.allocation;
+            const newAllocation = parseFloat((oldAllocation + parseFloat(allocationChange)).toFixed(1));
+
+            // Ensure allocation stays reasonable (not negative, not too high)
+            if (newAllocation > 1 && newAllocation < 25) {
+              asset.allocationUpdating = true;
+              asset.allocation = newAllocation;
+
+              // Reset animation flag after animation completes
+              setTimeout(() => {
+                asset.allocationUpdating = false;
+              }, 400); // Faster animation for more frequent updates
+
+              // Rebalance other allocations to maintain 100% total
+              rebalanceAllocations(index, parseFloat(allocationChange));
+            }
+          }
+        };
+
+        // Function to rebalance allocations when one changes
+        const rebalanceAllocations = (changedIndex, changeAmount) => {
+          // Distribute the change among other assets proportionally
+          const otherAssets = portfolioAssets.value.filter((_, i) => i !== changedIndex);
+          const totalOtherAllocation = otherAssets.reduce((sum, asset) => sum + asset.allocation, 0);
+
+          portfolioAssets.value.forEach((asset, i) => {
+            if (i !== changedIndex) {
+              const proportionalChange = -changeAmount * (asset.allocation / totalOtherAllocation);
+              asset.allocation = parseFloat((asset.allocation + proportionalChange).toFixed(1));
+            }
+          });
+        };
+
+        // Update total portfolio performance based on weighted assets
+        const updateTotalPerformance = () => {
+          const newTotal = portfolioAssets.value.reduce((sum, asset) => {
+            return sum + (asset.performance * asset.allocation / 100);
+          }, 0);
+
+          totalPerformanceUpdating.value = true;
+          totalPerformance.value = parseFloat(newTotal.toFixed(1));
+
+          // Reset animation flag after animation completes
+          setTimeout(() => {
+            totalPerformanceUpdating.value = false;
+          }, 600);
+        };
+
+        // Function to start live updates for portfolio values
+        const startLiveUpdates = () => {
+          // Update chart regularly
+          setInterval(() => {
+            updateChart();
+          }, 5000); // Every 5 seconds
+
+          // Update portfolio assets regularly with staggered timing
+          portfolioAssets.value.forEach((_, index) => {
+            setInterval(() => {
+              updatePortfolioAsset(index);
+            }, 3000 + Math.random() * 4000); // Random interval between 3-7 seconds
+          });
+
+          // Update total portfolio performance regularly
+          setInterval(() => {
+            updateTotalPerformance();
+          }, 5000); // Every 5 seconds
+        };
+
+        // Function to send a user message from the control room
+        const sendMessage = () => {
+          if (userMessage.value.trim() === '') return;
+
+          // Add user message to control chat
+          controlChat.value.push({
+            agent: 'User',
+            text: userMessage.value
+          });
+
+          // Scroll to bottom of chat
+          nextTick(() => {
+            if (chatRoom5.value) {
+              chatRoom5.value.scrollTop = chatRoom5.value.scrollHeight;
+            }
+          });
+
+          // Simulate response from an agent (in a real app, this would trigger LLM responses)
+          setTimeout(() => {
+            let respondingAgent;
+            let agentResponse;
+
+            // Simple keyword matching to simulate directed queries
+            const msg = userMessage.value.toLowerCase();
+            if (msg.includes('economy') || msg.includes('market')) {
+              respondingAgent = 'Economist';
+              agentResponse = "Based on current economic indicators, we're seeing mixed signals. Inflation is stabilizing but growth remains uneven across sectors.";
+            } else if (msg.includes('portfolio') || msg.includes('allocation')) {
+              respondingAgent = 'Portfolio Manager';
+              agentResponse = "I've analyzed your request and recommend adjusting our allocation to increase defensive positions by 5% while reducing exposure to high-beta tech names.";
+
+              // Simulate a major portfolio change
+              triggerMajorPortfolioShift();
+            } else if (msg.includes('risk') || msg.includes('volatility')) {
+              respondingAgent = 'Risk Manager';
+              agentResponse = "Risk metrics show elevated volatility in emerging markets. I recommend reducing exposure there until geopolitical tensions ease.";
+            } else if (msg.includes('model') || msg.includes('data')) {
+              respondingAgent = 'Quant';
+              agentResponse = "My predictive models suggest a 67% probability of continued outperformance in healthcare over the next quarter.";
+            } else if (msg.includes('trade') || msg.includes('execute')) {
+              respondingAgent = 'Trader';
+              agentResponse = "I'll begin executing the rebalance immediately, prioritizing liquidity and minimizing slippage.";
+
+              // Simulate active trading with more frequent updates
+              triggerActiveTrading();
+            } else if (msg.includes('chart') || msg.includes('technical')) {
+              respondingAgent = 'Technical Analyst';
+              agentResponse = "Chart patterns suggest we're approaching key resistance levels. I recommend cautious positioning until we see a confirmed breakout.";
+            } else if (msg.includes('strategy') || msg.includes('plan')) {
+              respondingAgent = 'CIO';
+              agentResponse = "I'm developing a comprehensive strategy based on your input. We'll prioritize sector rotation and quality factors in the next allocation adjustment.";
+            } else if (msg.includes('performance') || msg.includes('return')) {
+              respondingAgent = 'CEO';
+              agentResponse = "Our year-to-date performance is " + totalPerformance.value.toFixed(1) + "% above benchmark. I believe our strategic positioning for the coming quarter will further enhance results.";
+            } else {
+              respondingAgent = 'CIO';
+              agentResponse = "I've forwarded your request to the team. We'll analyze this and provide recommendations shortly.";
+            }
+
+            // Add agent response to control chat
+            controlChat.value.push({
+              agent: respondingAgent,
+              text: agentResponse
+            });
+
+            // Make respondingAgent active
+            activeAgents.value.push(respondingAgent.replace(/\s+/g, ''));
+
+            // Scroll to bottom of chat
+            nextTick(() => {
+              if (chatRoom5.value) {
+                chatRoom5.value.scrollTop = chatRoom5.value.scrollHeight;
+              }
+            });
+
+            // Remove agent from active after message is sent
+            setTimeout(() => {
+              activeAgents.value = activeAgents.value.filter(a => a !== respondingAgent.replace(/\s+/g, ''));
+            }, 1000);
+
+            // Update PNL chart to simulate impact of user directive
+            updateChart();
+
+          }, 1500);
+
+          // Clear the input field
+          userMessage.value = '';
+        };
+
+        // Function to trigger a major portfolio shift (used when user requests allocation changes)
+        const triggerMajorPortfolioShift = () => {
+          // Simulate major changes to multiple assets in sequence
+          portfolioAssets.value.forEach((asset, index) => {
+            setTimeout(() => {
+              // More dramatic changes
+              const performanceChange = (Math.random() * 1.2 - 0.4);
+              asset.performanceUpdating = true;
+              asset.performance = parseFloat((asset.performance + performanceChange).toFixed(1));
+
+              // Reset animation after completion
+              setTimeout(() => {
+                asset.performanceUpdating = false;
+              }, 600);
+
+              // Also update allocations more dramatically
+              if (Math.random() < 0.7) { // 70% chance of allocation change
+                const allocationChange = (Math.random() * 2 - 1).toFixed(1);
+                const newAllocation = parseFloat((asset.allocation + parseFloat(allocationChange)).toFixed(1));
+
+                if (newAllocation > 1 && newAllocation < 30) {
+                  asset.allocationUpdating = true;
+                  asset.allocation = newAllocation;
+
+                  setTimeout(() => {
+                    asset.allocationUpdating = false;
+                  }, 600);
+                }
+              }
+
+              // Update total after all individual updates
+              if (index === portfolioAssets.value.length - 1) {
+                setTimeout(updateTotalPerformance, 500);
+              }
+            }, index * 300); // Stagger the updates for visual effect
+          });
+
+          // After all updates, rebalance to ensure total is 100%
+          setTimeout(() => {
+            const totalAllocation = portfolioAssets.value.reduce((sum, asset) => sum + asset.allocation, 0);
+            const adjustmentFactor = 100 / totalAllocation;
+
+            portfolioAssets.value.forEach(asset => {
+              asset.allocation = parseFloat((asset.allocation * adjustmentFactor).toFixed(1));
+            });
+          }, portfolioAssets.value.length * 300 + 500);
+        };
+
+        // Function to simulate active trading (more frequent small updates)
+        const triggerActiveTrading = () => {
+          // Select 3 random assets to actively trade
+          const tradedIndices = [];
+          while (tradedIndices.length < 3) {
+            const randomIndex = Math.floor(Math.random() * portfolioAssets.value.length);
+            if (!tradedIndices.includes(randomIndex)) {
+              tradedIndices.push(randomIndex);
+            }
+          }
+
+          // More frequent updates to the selected assets
+          tradedIndices.forEach(index => {
+            for (let i = 0; i < 5; i++) { // 5 rapid updates
+              setTimeout(() => {
+                const asset = portfolioAssets.value[index];
+                const smallChange = (Math.random() * 0.4 - 0.2).toFixed(1);
+                asset.performanceUpdating = true;
+                asset.performance = parseFloat((asset.performance + parseFloat(smallChange)).toFixed(1));
+
+                setTimeout(() => {
+                  asset.performanceUpdating = false;
+                }, 400);
+              }, 800 * i); // Update every 800ms
+            }
+          });
+
+          // Update total performance after trading activity
+          setTimeout(updateTotalPerformance, 4500);
+        };
+
+        // Sample conversations that would be replaced with actual LLM outputs
+        const room1Conversation = [
+          { agent: "Economist", text: "Based on the latest labor reports, we're seeing a tightening job market with unemployment at 3.7%." },
+          { agent: "Portfolio Manager", text: "That could signal rising wage inflation. How does this impact our positioning in consumer discretionary stocks?" },
+          { agent: "Economist", text: "It's a mixed signal. Higher wages mean more spending power, but the Fed might need to maintain higher rates for longer." },
+          { agent: "Portfolio Manager", text: "Let's reduce exposure to rate-sensitive retail and increase allocation to consumer staples and luxury brands." },
+          { agent: "Economist", text: "I concur. The latest GDP projection shows 2.3% growth for next quarter, which supports that strategy." },
+          { agent: "Portfolio Manager", text: "We should also consider the impact of higher rates on tech valuations. Many high-growth tech companies may face pressure." },
+          { agent: "Economist", text: "Valid point. Tech companies with strong cash flows and reasonable valuations should still perform well, but speculative tech might struggle." }
+        ];
+
+        const room2Conversation = [
+          { agent: "Quant", text: "My model is showing significant factor rotation from growth to value over the last 20 trading days." },
+          { agent: "Risk Manager", text: "That's concerning given our growth tilt. What's driving it?" },
+          { agent: "Quant", text: "The yield curve is flattening again. My machine learning models suggest a 68% probability this rotation continues." },
+          { agent: "Risk Manager", text: "Let's run stress tests on the portfolio assuming rates rise another 50 basis points." },
+          { agent: "Quant", text: "Running Monte Carlo simulations now... Results show we'd need to reduce our tech exposure by approximately 12% to maintain our risk parameters." },
+          { agent: "Risk Manager", text: "I'm also seeing increased correlation between asset classes that typically diversify each other. That's another warning sign." },
+          { agent: "Quant", text: "Good observation. Let me run a Principal Component Analysis to identify the underlying factors driving this correlation increase." }
+        ];
+
+        const room3Conversation = [
+          { agent: "Technical Analyst", text: "We have a golden cross forming on the S&P 500 daily chart. Typically a strong bullish indicator." },
+          { agent: "Trader", text: "Noted. What about volume patterns? Are they confirming the move?" },
+          { agent: "Technical Analyst", text: "Volume is above the 20-day average, but not significantly. I'd classify this as a moderate-strength signal." },
+          { agent: "Trader", text: "I'll begin accumulating positions, but gradually rather than all at once. Starting with 30% of planned allocation." },
+          { agent: "Technical Analyst", text: "Smart approach. I'm also seeing resistance at 4,850. We should watch that level closely." },
+          { agent: "Trader", text: "What about sector rotation? Any standout sectors showing strength on a relative basis?" },
+          { agent: "Technical Analyst", text: "Healthcare and utilities are showing the strongest relative strength right now. Technology is mixed with large-caps outperforming small-caps." }
+        ];
+
+        const room4Conversation = [
+          { agent: "CIO", text: "Based on inputs from all teams, I'm seeing an opportunity in healthcare innovation while reducing exposure to small-cap tech." },
+          { agent: "CEO", text: "What's our expected performance impact from this reallocation?" },
+          { agent: "CIO", text: "Models suggest we can reduce volatility by 1.2% while maintaining similar return expectations." },
+          { agent: "CEO", text: "Approved. Let's also prepare a client communication about our strategic shift." },
+          { agent: "CIO", text: "I'll draft a message emphasizing our proactive risk management while maintaining exposure to technological innovation through larger, more established firms." },
+          { agent: "CEO", text: "What are your thoughts on increasing our allocation to private markets? They're less correlated with public equities." },
+          { agent: "CIO", text: "I'm cautious there. Private valuations often lag public markets, and liquidity constraints could become an issue if market volatility increases." }
+        ];
+
+        // Function to simulate conversations
+        const simulateConversation = (roomChat, conversation) => {
+          let messageIndex = 0;
+
+          const addMessage = () => {
+            if (messageIndex < conversation.length) {
+              const message = conversation[messageIndex];
+
+              // Add the agent to active agents
+              activeAgents.value.push(message.agent.replace(/\s+/g, ''));
+
+              // Add message after a delay to simulate typing
+              setTimeout(() => {
+                roomChat.value.push(message);
+
+                // Scroll to bottom of chat
+                nextTick(() => {
+                  if (roomChat === room1Chat && chatRoom1.value) {
+                    chatRoom1.value.scrollTop = chatRoom1.value.scrollHeight;
+                  } else if (roomChat === room2Chat && chatRoom2.value) {
+                    chatRoom2.value.scrollTop = chatRoom2.value.scrollHeight;
+                  } else if (roomChat === room3Chat && chatRoom3.value) {
+                    chatRoom3.value.scrollTop = chatRoom3.value.scrollHeight;
+                  } else if (roomChat === room4Chat && chatRoom4.value) {
+                    chatRoom4.value.scrollTop = chatRoom4.value.scrollHeight;
+                  }
+                });
+
+                // Remove agent from active after message is sent
+                setTimeout(() => {
+                  activeAgents.value = activeAgents.value.filter(a => a !== message.agent.replace(/\s+/g, ''));
+                }, 1000);
+
+                messageIndex++;
+                if (messageIndex < conversation.length) {
+                  setTimeout(addMessage, 3000 + Math.random() * 2000); // Random delay between messages
+                }
+              }, 1500); // Simulate typing time
+            }
+          };
+
+          addMessage();
+        };
+
+        onMounted(() => {
+          // Initialize the PNL chart
+          initChart();
+
+          // Start the conversations with slight delays between rooms
+          setTimeout(() => simulateConversation(room1Chat, room1Conversation), 1000);
+          setTimeout(() => simulateConversation(room2Chat, room2Conversation), 2500);
+          setTimeout(() => simulateConversation(room3Chat, room3Conversation), 4000);
+          setTimeout(() => simulateConversation(room4Chat, room4Conversation), 5500);
+
+          // Welcome message in control room
+          controlChat.value.push({
+            agent: 'System',
+            text: 'Welcome to the AI Investment Company Control Room. How can our agents assist you today?'
+          });
+        });
+
+        return {
+          room1Chat,
+          room2Chat,
+          room3Chat,
+          room4Chat,
+          controlChat,
+          activeAgents,
+          userMessage,
+          sendMessage,
+          chatRoom1,
+          chatRoom2,
+          chatRoom3,
+          chatRoom4,
+          chatRoom5,
+          portfolioAssets,
+          totalPerformance,
+          totalPerformanceUpdating
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

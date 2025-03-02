@@ -1,0 +1,242 @@
+/* src/assets/css/themes.css */
+/*
+ * This file contains theme variables for both our custom components
+ * and overrides for PrimeVue components to ensure consistent styling
+ */
+
+/* Light theme (default) */
+:root {
+  /* Custom theme variables */
+  --bg-primary: #f8f9fe;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #edf0ff;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-accent: #4f46e5;
+
+  --border-color: #e2e8f0;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+
+  /* Accent colors */
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-pink: #ec4899;
+  --accent-green: #10b981;
+  --accent-yellow: #f59e0b;
+  --accent-red: #ef4444;
+
+  /* Neon glows */
+  --glow-blue: 0 0 15px rgba(59, 130, 246, 0.5);
+  --glow-purple: 0 0 15px rgba(139, 92, 246, 0.5);
+  --glow-pink: 0 0 15px rgba(236, 72, 153, 0.5);
+}
+
+/* Dark theme */
+.dark-theme {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-accent: #818cf8;
+
+  --border-color: #334155;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+
+  /* Accent colors - brighter in dark mode */
+  --accent-blue: #60a5fa;
+  --accent-purple: #a78bfa;
+  --accent-pink: #f472b6;
+  --accent-green: #34d399;
+  --accent-yellow: #fbbf24;
+  --accent-red: #f87171;
+
+  /* Neon glows - more intense in dark mode */
+  --glow-blue: 0 0 20px rgba(96, 165, 250, 0.7);
+  --glow-purple: 0 0 20px rgba(167, 139, 250, 0.7);
+  --glow-pink: 0 0 20px rgba(244, 114, 182, 0.7);
+}
+
+/* Cyberpunk theme elements */
+.dark-theme .cyber-line {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-blue) 0%,
+    var(--accent-purple) 50%,
+    var(--accent-pink) 100%
+  );
+  opacity: 0.7;
+  border-radius: 2px;
+}
+
+.dark-theme .cyber-grid {
+  background-image:
+    linear-gradient(var(--bg-tertiary) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-tertiary) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: center center;
+}
+
+/* Futuristic elements */
+.cyber-border {
+  position: relative;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.cyber-border::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background-image: linear-gradient(
+    135deg,
+    var(--accent-blue),
+    var(--accent-purple),
+    var(--accent-pink),
+    var(--accent-purple),
+    var(--accent-blue)
+  );
+  background-size: 400% 400%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  animation: gradientShift 3s ease infinite;
+}
+
+.cyber-border:hover::after {
+  opacity: 1;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Futuristic dots decoration */
+.cyber-dots {
+  position: relative;
+}
+
+.cyber-dots::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(
+    var(--border-color) 1px,
+    transparent 1px
+  );
+  background-size: 20px 20px;
+  opacity: 0.3;
+  z-index: -1;
+}
+
+/* Neon text */
+.neon-text {
+  text-shadow: 0 0 5px currentColor;
+}
+
+.neon-text-blue {
+  color: var(--accent-blue);
+  text-shadow: 0 0 5px var(--accent-blue);
+}
+
+.neon-text-purple {
+  color: var(--accent-purple);
+  text-shadow: 0 0 5px var(--accent-purple);
+}
+
+.neon-text-pink {
+  color: var(--accent-pink);
+  text-shadow: 0 0 5px var(--accent-pink);
+}
+
+/* Enhanced styling for PrimeVue components */
+
+/* Buttons with cyber styling */
+.p-button {
+  transition: all 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.p-button:not(.p-button-text):not(.p-button-link):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glow-purple);
+}
+
+/* Dialog styling for futuristic look */
+.p-dialog {
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+.dark-theme .p-dialog {
+  background: var(--bg-secondary);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--glow-purple);
+}
+
+.dark-theme .p-dialog .p-dialog-header {
+  background: linear-gradient(90deg, var(--bg-tertiary), var(--bg-secondary));
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Inputs with neon focus effect */
+.dark-theme .p-inputtext:focus {
+  box-shadow: 0 0 0 1px var(--accent-purple);
+  border-color: var(--accent-purple);
+}
+
+/* Cyber styling for select dropdown */
+.dark-theme .p-dropdown-panel {
+  background-color: var(--bg-secondary);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+}
+
+.dark-theme .p-dropdown-item.p-highlight {
+  background-color: var(--accent-purple);
+  color: white;
+}
+
+/* Toast messages with a cyber look */
+.dark-theme .p-toast {
+  backdrop-filter: blur(10px);
+}
+
+.dark-theme .p-toast .p-toast-message {
+  border-left: 6px solid var(--accent-purple);
+  background-color: rgba(30, 41, 59, 0.9);
+}
+
+/* Menu with cyber styling */
+.dark-theme .p-menu {
+  background-color: var(--bg-secondary);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+}
+
+.dark-theme .p-menu .p-menuitem-link:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.dark-theme .p-menu .p-menuitem-link:focus {
+  box-shadow: inset 0 0 0 0.15rem var(--accent-purple);
+}

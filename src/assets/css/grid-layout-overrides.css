@@ -1,0 +1,125 @@
+/* src/assets/css/grid-layout-overrides.css */
+/* These styles will override the default grid-layout-plus styles to match our theme */
+
+/* Grid container */
+.vue-grid-layout {
+  background-color: transparent;
+}
+
+/* Grid items */
+.vue-grid-item {
+  transition: transform 0.2s ease;
+  touch-action: none;
+  overflow: visible !important;
+}
+
+.vue-grid-item.vue-draggable-dragging {
+  z-index: 10;
+  transition: none;
+}
+
+/* Completely override placeholder styles to fix red overlay */
+.vue-grid-item.vue-grid-placeholder {
+  background-color: var(--accent-purple) !important;
+  opacity: 0.1 !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: var(--border-radius-md);
+  transition-duration: 0.1s;
+  z-index: 1 !important;
+  user-select: none;
+}
+
+/* Remove any selection styling while dragging */
+.vue-grid-item.vue-draggable-dragging * {
+  pointer-events: none;
+}
+
+/* Resize handle styling */
+.vue-grid-item > .vue-resizable-handle {
+  background-image: none;
+  background-color: var(--accent-purple);
+  opacity: 0.3;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  transition: opacity 0.2s ease;
+  z-index: 3;
+}
+
+/* Position all handles */
+.vue-grid-item > .vue-resizable-handle.vue-resizable-handle-se {
+  right: 4px;
+  bottom: 4px;
+}
+
+.vue-grid-item > .vue-resizable-handle.vue-resizable-handle-sw {
+  left: 4px;
+  bottom: 4px;
+}
+
+.vue-grid-item > .vue-resizable-handle.vue-resizable-handle-ne {
+  right: 4px;
+  top: 4px;
+}
+
+.vue-grid-item > .vue-resizable-handle.vue-resizable-handle-nw {
+  left: 4px;
+  top: 4px;
+}
+
+.vue-grid-item > .vue-resizable-handle.vue-resizable-handle-n {
+  top: 4px;
+  left: 50%;
+  margin-left: -7px;
+}
+
+.vue-grid-item > .vue-resizable-handle.vue-resizable-handle-s {
+  bottom: 4px;
+  left: 50%;
+  margin-left: -7px;
+}
+
+.vue-grid-item > .vue-resizable-handle.vue-resizable-handle-e {
+  right: 4px;
+  top: 50%;
+  margin-top: -7px;
+}
+
+.vue-grid-item > .vue-resizable-handle.vue-resizable-handle-w {
+  left: 4px;
+  top: 50%;
+  margin-top: -7px;
+}
+
+.vue-grid-item > .vue-resizable-handle:hover {
+  opacity: 0.8;
+}
+
+.vue-grid-item > .vue-resizable-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid white;
+  border-bottom: 2px solid white;
+}
+
+/* Dark theme specific overrides */
+.dark-theme .vue-grid-item.vue-grid-placeholder {
+  background-color: var(--accent-purple) !important;
+  opacity: 0.4;
+}
+
+.dark-theme .vue-grid-item > .vue-resizable-handle {
+  background-color: var(--accent-purple);
+  opacity: 0.5;
+}
+
+.dark-theme .vue-grid-item > .vue-resizable-handle:hover {
+  opacity: 1;
+  box-shadow: 0 0 10px var(--accent-purple);
+}

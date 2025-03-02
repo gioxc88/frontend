@@ -1,0 +1,218 @@
+/* src/assets/css/base.css */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;300;400;700&display=swap');
+
+:root {
+  --border-radius-sm: 0.25rem;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 1rem;
+  --animation-speed: 0.3s;
+
+  /* Animation keyframes */
+  --hover-scale: scale(1.02);
+  --active-scale: scale(0.98);
+
+  /* Space between elements */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  /* Z-index layers */
+  --z-dropdown: 1000;
+  --z-sticky: 1010;
+  --z-modal: 1050;
+  --z-tooltip: 1070;
+}
+
+/* Light theme (default) */
+:root {
+  --bg-primary: #f8f9fe;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #edf0ff;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-accent: #4f46e5;
+
+  --border-color: #e2e8f0;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+
+  /* Accent colors */
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-pink: #ec4899;
+  --accent-green: #10b981;
+  --accent-yellow: #f59e0b;
+  --accent-red: #ef4444;
+
+  /* Neon glows */
+  --glow-blue: 0 0 15px rgba(59, 130, 246, 0.5);
+  --glow-purple: 0 0 15px rgba(139, 92, 246, 0.5);
+  --glow-pink: 0 0 15px rgba(236, 72, 153, 0.5);
+}
+
+/* Box shadows for consistent use */
+.shadow-sm {
+  box-shadow: 0 1px 2px var(--shadow-color);
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px var(--shadow-color),
+              0 0 0 1px var(--border-color);
+}
+
+.shadow-glow-blue {
+  box-shadow: var(--glow-blue);
+}
+
+.shadow-glow-purple {
+  box-shadow: var(--glow-purple);
+}
+
+.shadow-glow-pink {
+  box-shadow: var(--glow-pink);
+}
+
+/* Base styling */
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  transition: background-color var(--animation-speed),
+              color var(--animation-speed);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  font-weight: 600;
+}
+
+pre, code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Smooth transition effects */
+.transition-all {
+  transition: all var(--animation-speed) ease;
+}
+
+/* Glassmorphism styles */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Button styling */
+.btn {
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform var(--animation-speed),
+              box-shadow var(--animation-speed),
+              background-color var(--animation-speed);
+}
+
+.btn:hover {
+  transform: var(--hover-scale);
+}
+
+.btn:active {
+  transform: var(--active-scale);
+}
+
+.btn-primary {
+  background-color: var(--accent-purple);
+  color: white;
+  border: none;
+}
+
+.btn-secondary {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-circle {
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Utility classes */
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.gap-sm {
+  gap: var(--space-sm);
+}
+
+.gap-md {
+  gap: var(--space-md);
+}
+
+.gap-lg {
+  gap: var(--space-lg);
+}
+
+/* Custom scroll-bars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-accent);
+}

@@ -1,0 +1,7 @@
+@import './css/base.css';
+@import './css/themes.css';
+@import 'tailwindcss';
+@import 'primeicons/primeicons.css';
+@plugin 'tailwindcss-primeui';
+
+
